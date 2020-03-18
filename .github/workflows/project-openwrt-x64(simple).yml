@@ -5,7 +5,7 @@
 # Author: P3TERX
 # Blog: https://p3terx.com
 #=================================================
-name: X64-Master
+name: project-openwrt-x64(simple)
 
 on:
   schedule:
@@ -46,7 +46,7 @@ jobs:
       run: |
           cd openwrt
           rm -f .config
-          cp ../x64-master .config
+          cp ../project-openwrt-x64(simple) .config
 
     - name: Make download
       run: |
