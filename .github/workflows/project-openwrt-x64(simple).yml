@@ -77,10 +77,11 @@ jobs:
       run: |
           rm -rf ./artifact/
           mkdir -p ./artifact/
-          find openwrt/bin/targets/ -name "*sysupgrade*bin*" | xargs -i mv -f {} ./artifact/
-          find openwrt/bin/targets/ -name "*combined*img*" | xargs -i mv -f {} ./artifact/
+          find openwrt/bin/targets/ -name "*sysupgrade*bin*" | xargs -i mv -f {} ./artifact/${f}-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)
+          find openwrt/bin/targets/ -name "*combined*img*" | xargs -i mv -f {} ./artifact/${f}-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)     
+    
     - name: Upload artifact
       uses: actions/upload-artifact@master
       with:
-        name: OpenWrt firmware
+        name: ${f}-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)
         path: ./artifact/
