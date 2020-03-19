@@ -5,14 +5,14 @@
 # Author: P3TERX
 # Blog: https://p3terx.com
 #=================================================
-name: project-openwrt-x64(simple)
+name: project-openwrt-x64(all)
 
 on:
   schedule:
     - cron: 0 20 * * *
-#  push:
-#    branches: 
-#      - master
+  push:
+    branches: 
+      - master
 
   watch:
     types: [started]
