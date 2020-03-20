@@ -26,13 +26,13 @@ env:
   REPO_BRANCH: master
   CONFIG_FILE: project-x64-all-ssr-jo
   DIY_SH: diy.sh
+  FIRMWARE_NAME: project-openwrt-x64(all)-ssr-jo
   SSH_ACTIONS: true
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   TZ: Asia/Shanghai
   TARGET: x86
-  SUBTARGET: x64
-  DEVICE: project-openwrt-x64(all)-ssr-jo
+  SUBTARGET: 64
   
   # FREE_UP_DISK: true
   # UPLOAD_EXT4_IMAGES: true
@@ -122,7 +122,7 @@ jobs:
         with:
           name: OpenWrt_bin
           path: openwrt/bin
-
+          
       - name: Organize files
         id: organize
         if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
@@ -131,10 +131,35 @@ jobs:
           rm -rf packages
           echo "::set-env name=FIRMWARE::$PWD"
           echo "::set-output name=status::success"
-
+          
+      - name: Extract Gz Files
+        id: extract
+        if: steps.organize.outputs.status == 'success'
+        run: |
+          cd openwrt/bin/targets/$TARGET/$SUBTARGET
+          gzip -qdc *-combined-squashfs.img.gz > $FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)-combined-squashfs.img || true
+          gzip -qdc *-rootfs-squashfs.img.gz > $FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)-rootfs-squashfs.img || true
+          gzip -qdc *-squashfs-factory.img.gz > $FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)-squashfs-factory.img || true
+          gzip -qdc *-squashfs-sysupgrade.img.gz > $FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)-squashfs-sysupgrade.img || true
+          gzip -qdc *-ext4-factory.img.gz > $FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)-ext4-factory.img || true
+          gzip -qdc *-ext4-sysupgrade.img.gz > $FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)-ext4-sysupgrade.img || true
+          echo "::set-output name=status::success"          
+   
+      - name: Gz Files
+        id: Gzip_file
+        if: steps.extract.outputs.status == 'success'
+        run: |
+          cd openwrt/bin/targets/$TARGET/$SUBTARGET
+          release_tag="$FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
+          img_file_name="${release_tag}*.img"
+          tar -zcf "${img_file_name}.gz" $img_file_name
+          echo "##[set-output name=release_tag;]$release_tag"
+          
       - name: Upload firmware directory
         uses: actions/upload-artifact@master
-        if: steps.organize.outputs.status == 'success' && !cancelled()
+        if: steps.Gzip_file.outputs.status == 'success'
         with:
-          name: OpenWrt_firmware
-          path: ${{ env.FIRMWARE }}
+          name: ${{ steps.zip_file.outputs.release_tag }}
+          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DOWNLOAD_URL_FILE }}
+          
+
