@@ -10,9 +10,12 @@ name: project-openwrt-x64(all)-ssr-jo
 on:
   schedule:
     - cron: 0 20 * * *
-  # push:
-    # branches: 
-      # - master
+  push:
+    branches: 
+      - master
+    paths:
+      - '.github/workflows/project-openwrt-x64(all)-ssr-jo.yml'
+      - 'project-x64-all-ssr-jo'
 
   watch:
     types: [started]
