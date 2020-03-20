@@ -148,12 +148,12 @@ jobs:
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
           release_tag="$FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
-          tar-zcf "${release_tag}-combined-squashfs.img.gz" $FIRMWARE_NAME-combined-squashfs.img
-          tar-zcf "${release_tag}-rootfs-squashfs.img.gz" $FIRMWARE_NAME-rootfs-squashfs.img
-          tar-zcf "${release_tag}-squashfs-factory.img.gz" $FIRMWARE_NAME-squashfs-factory.img
-          tar-zcf "${release_tag}-squashfs-sysupgrade.img.gz" $FIRMWARE_NAME-squashfs-sysupgrade.img
-          tar-zcf "${release_tag}-ext4-factory.img" $FIRMWARE_NAME-ext4-factory.img
-          tar-zcf "${release_tag}-ext4-sysupgrade.img.gz" $FIRMWARE_NAME-ext4-sysupgrade.img
+          tar -zcf "${release_tag}-combined-squashfs.img.gz" $FIRMWARE_NAME-combined-squashfs.img
+          tar -zcf "${release_tag}-rootfs-squashfs.img.gz" $FIRMWARE_NAME-rootfs-squashfs.img
+          tar -zcf "${release_tag}-squashfs-factory.img.gz" $FIRMWARE_NAME-squashfs-factory.img
+          tar -zcf "${release_tag}-squashfs-sysupgrade.img.gz" $FIRMWARE_NAME-squashfs-sysupgrade.img
+          tar -zcf "${release_tag}-ext4-factory.img" $FIRMWARE_NAME-ext4-factory.img
+          tar -zcf "${release_tag}-ext4-sysupgrade.img.gz" $FIRMWARE_NAME-ext4-sysupgrade.img
           echo "##[set-output name=release_tag;]$release_tag"
           
       - name: Generate Sha256sum File For Images
