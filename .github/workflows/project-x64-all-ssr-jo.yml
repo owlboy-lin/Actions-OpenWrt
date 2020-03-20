@@ -33,6 +33,7 @@ env:
   TARGET: x86
   SUBTARGET: x64
   DEVICE: project-openwrt-x64(all)-ssr-jo
+  
   # FREE_UP_DISK: true
   # UPLOAD_EXT4_IMAGES: true
   # UPLOAD_SQUASHFS_IMAGES: true
