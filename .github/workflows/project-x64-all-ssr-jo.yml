@@ -14,7 +14,7 @@ on:
     branches: 
       - master
     paths:
-      - '.github/workflows/project-openwrt-x64-all-ssr-jo.yml'
+      - '.github/workflows/project-x64-all-ssr-jo.yml'
       - 'project-x64-all-ssr-jo'
 
   watch:
