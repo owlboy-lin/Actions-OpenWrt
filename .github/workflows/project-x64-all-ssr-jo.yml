@@ -95,9 +95,6 @@ jobs:
           cd openwrt
           ../$DIY_SH
 
-      - name: SSH connection to Actions
-        uses: P3TERX/debugger-action@master
-        if: env.SSH_ACTIONS == 'true'
 
       - name: Download package
         id: package
@@ -154,6 +151,11 @@ jobs:
           img_file_name="${release_tag}*.img"
           tar -zcf "${img_file_name}.gz" $img_file_name
           echo "##[set-output name=release_tag;]$release_tag"
+          
+
+      - name: SSH connection to Actions
+        uses: P3TERX/debugger-action@master
+        if: env.SSH_ACTIONS == 'true'
           
       - name: Upload firmware directory
         uses: actions/upload-artifact@master
