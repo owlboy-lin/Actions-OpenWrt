@@ -173,7 +173,7 @@ jobs:
         uses: actions/upload-artifact@master
         
         with:
-          name: ${{ steps.zip_file.outputs.release_tag }}
+          name: ${{ steps.Gzip_file.outputs.release_tag }}
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
           
 
