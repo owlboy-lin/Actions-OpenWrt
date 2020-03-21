@@ -112,26 +112,10 @@ jobs:
           echo -e "$(nproc) thread compile"
           make -j$(nproc) || make -j1 V=s
           echo "::set-output name=status::success"
-
-      - name: Upload bin directory
-        uses: actions/upload-artifact@master
-        if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
-        with:
-          name: OpenWrt_bin
-          path: openwrt/bin
-          
-      - name: Organize files
-        id: organize
-        if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
-        run: |
-          cd openwrt/bin/targets/*/*
-          rm -rf packages
-          echo "::set-env name=FIRMWARE::$PWD"
-          echo "::set-output name=status::success"
           
       - name: Extract Gz Files
         id: extract
-        if: steps.organize.outputs.status == 'success'
+        if: steps.compile.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
           gzip -qdc *-combined-squashfs.img.gz > $FIRMWARE_NAME-combined-squashfs.img || true
@@ -144,22 +128,23 @@ jobs:
           echo "::set-output name=status::success"          
    
       - name: Gz Files
-        id: Gzip_file
+        id: Gzip_files
         if: steps.extract.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
           release_tag="$FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
-          tar -zcf "${release_tag}-combined-squashfs.img.gz" $FIRMWARE_NAME-combined-squashfs.img
-          tar -zcf "${release_tag}-rootfs-squashfs.img.gz" $FIRMWARE_NAME-rootfs-squashfs.img
-          tar -zcf "${release_tag}-squashfs-factory.img.gz" $FIRMWARE_NAME-squashfs-factory.img
-          tar -zcf "${release_tag}-squashfs-sysupgrade.img.gz" $FIRMWARE_NAME-squashfs-sysupgrade.img
-          tar -zcf "${release_tag}-ext4-factory.img" $FIRMWARE_NAME-ext4-factory.img
-          tar -zcf "${release_tag}-ext4-sysupgrade.img.gz" $FIRMWARE_NAME-ext4-sysupgrade.img
+          tar -zcf "${release_tag}-combined-squashfs.img.gz" $FIRMWARE_NAME-combined-squashfs.img || true
+          tar -zcf "${release_tag}-rootfs-squashfs.img.gz" $FIRMWARE_NAME-rootfs-squashfs.img || true
+          tar -zcf "${release_tag}-squashfs-factory.img.gz" $FIRMWARE_NAME-squashfs-factory.img || true
+          tar -zcf "${release_tag}-squashfs-sysupgrade.img.gz" $FIRMWARE_NAME-squashfs-sysupgrade.img || true
+          tar -zcf "${release_tag}-ext4-factory.img" $FIRMWARE_NAME-ext4-factory.img || true
+          tar -zcf "${release_tag}-ext4-sysupgrade.img.gz" $FIRMWARE_NAME-ext4-sysupgrade.img || true
           rm -f *.img
+          echo "::set-output name=status::success"
           echo "##[set-output name=release_tag;]$release_tag"
           
       - name: Generate Sha256sum File For Images
-        
+        if: steps.Gzip_files.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
           mv sha256sums sha256sums.orig
@@ -169,11 +154,26 @@ jobs:
         uses: P3TERX/debugger-action@master
         if: env.SSH_ACTIONS == 'true'
           
+      - name: Upload bin directory
+        uses: actions/upload-artifact@master
+        if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+        with:
+          name: ${{ steps.zip_file.outputs.release_tag }}
+          path: openwrt/bin/
+          
+      - name: Organize files
+        id: organize
+        if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+        run: |
+          cd openwrt/bin/targets/*/*
+          rm -rf packages
+          echo "::set-output name=status::success"
+                    
       - name: Upload firmware directory
         uses: actions/upload-artifact@master
-        
+        if: steps.organize.outputs.status == 'success' && !cancelled()
         with:
-          name: ${{ steps.Gzip_file.outputs.release_tag }}
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
+          name: ${{ steps.Gzip_files.outputs.release_tag }}
+          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}
           
 
