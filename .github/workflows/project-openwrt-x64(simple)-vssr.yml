@@ -162,7 +162,6 @@ jobs:
           mv sha256sums sha256sums.orig
           sha256sum *.img > sha256sums
 
-
       - name: SSH connection to Actions
         uses: P3TERX/debugger-action@master
         if: env.SSH_ACTIONS == 'true'
