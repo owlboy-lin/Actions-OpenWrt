@@ -155,6 +155,7 @@ jobs:
           tar -zcf "${release_tag}-squashfs-sysupgrade.img.gz" $FIRMWARE_NAME-squashfs-sysupgrade.img || true
           tar -zcf "${release_tag}-ext4-factory.img" $FIRMWARE_NAME-ext4-factory.img || true
           tar -zcf "${release_tag}-ext4-sysupgrade.img.gz" $FIRMWARE_NAME-ext4-sysupgrade.img || true
+          rm -f *.img
           echo "##[set-output name=release_tag;]$release_tag"
           
       - name: Generate Sha256sum File For Images
