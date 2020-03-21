@@ -148,7 +148,7 @@ jobs:
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
           mv sha256sums sha256sums.orig
-          sha256sum *.img > sha256sums
+          sha256sum *.* > sha256sums
 
       - name: SSH connection to Actions
         uses: P3TERX/debugger-action@master
