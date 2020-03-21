@@ -26,12 +26,13 @@ env:
   CONFIG_FILE: project-x64-simple-vssr
   DIY_SH: diy.sh
   FIRMWARE_NAME: project-openwrt-x64(simple)-vssr
-  SSH_ACTIONS: true
+  TARGET: x86
+  SUBTARGET: 64
+  SSH_ACTIONS: false
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   TZ: Asia/Shanghai
-  TARGET: x86
-  SUBTARGET: 64
+
   
   # FREE_UP_DISK: true
   # UPLOAD_EXT4_IMAGES: true
@@ -139,6 +140,7 @@ jobs:
           gzip -qdc *-squashfs-sysupgrade.img.gz > $FIRMWARE_NAME-squashfs-sysupgrade.img || true
           gzip -qdc *-ext4-factory.img.gz > $FIRMWARE_NAME-ext4-factory.img || true
           gzip -qdc *-ext4-sysupgrade.img.gz > $FIRMWARE_NAME-ext4-sysupgrade.img || true
+          rm -f *.gz
           echo "::set-output name=status::success"          
    
       - name: Gz Files
@@ -156,7 +158,7 @@ jobs:
           echo "##[set-output name=release_tag;]$release_tag"
           
       - name: Generate Sha256sum File For Images
-        if: steps.Gzip_file.outputs.status == 'success'
+        
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
           mv sha256sums sha256sums.orig
