@@ -76,8 +76,7 @@ jobs:
           # ln -s /mnt/openwrt/staging_dir ./staging_dir
 
           df -h
-      
-          
+    
       - name: Clone source code
         run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
 
@@ -94,7 +93,6 @@ jobs:
           chmod +x $DIY_SH
           cd openwrt
           ../$DIY_SH
-
 
       - name: Download package
         id: package
