@@ -131,7 +131,7 @@ jobs:
         if: steps.extract.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          release_tag="$FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
+          release_tag="${{ env.FIRMWARE_NAME }}-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
           find . -name "*-combined-squashfs.img" | xargs -i {} mv {} "${release_tag}-combined-squashfs.img" || true
           find . -name "*-rootfs-squashfs.img" | xargs -i {} mv {} "${release_tag}-rootfs-squashfs.img" || true
           find . -name "*-squashfs-factory.img" | xargs -i {} mv {} "${release_tag}-squashfs-factory.img" || true
@@ -153,7 +153,7 @@ jobs:
           echo "##[set-output name=release_tag;]$release_tag"
           
       - name: Gz Files
-        id: Gzip_files
+        id: Gzip_file
         if: steps.rename.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
@@ -168,7 +168,7 @@ jobs:
           echo "::set-output name=status::success"
   
       - name: Generate Sha256sum File For Images
-        if: steps.Gzip_files.outputs.status == 'success'
+        if: steps.Gzip_file.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
           mv sha256sums sha256sums.orig
