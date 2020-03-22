@@ -5,7 +5,7 @@
 # Author: P3TERX
 # Blog: https://p3terx.com
 #=================================================
-name: project-openwrt-x64(simple)-vssr
+name: project-openwrt-x64-simple-vssr
 on:
   schedule:
     - cron: 0 20 * * *
@@ -13,7 +13,7 @@ on:
     branches: 
       - master
     paths:
-      - '.github/workflows/project-openwrt-x64(simple)-vssr.yml'
+      - '.github/workflows/project-openwrt-x64-simple-vssr.yml'
       - 'project-x64-simple-vssr'
 
   watch:
@@ -25,7 +25,7 @@ env:
   REPO_BRANCH: master
   CONFIG_FILE: project-x64-simple-vssr
   DIY_SH: diy.sh
-  FIRMWARE_NAME: project-openwrt-x64(simple)-vssr
+  FIRMWARE_NAME: project-openwrt-x64-simple-vssr
   TARGET: x86
   SUBTARGET: 64
   SSH_ACTIONS: false
@@ -110,6 +110,20 @@ jobs:
           echo -e "$(nproc) thread compile"
           make -j$(nproc) || make -j1 V=s
           echo "::set-output name=status::success"
+      
+      - name: Extract Gz Files
+        id: extract
+        if: steps.compile.outputs.status == 'success'
+        run: |
+          cd openwrt/bin/targets/$TARGET/$SUBTARGET
+          gzip -qdc *-combined-squashfs.img.gz > $FIRMWARE_NAME-combined-squashfs.img || true
+          gzip -qdc *-rootfs-squashfs.img.gz > $FIRMWARE_NAME-rootfs-squashfs.img || true
+          gzip -qdc *-squashfs-factory.img.gz > $FIRMWARE_NAME-squashfs-factory.img || true
+          gzip -qdc *-squashfs-sysupgrade.img.gz > $FIRMWARE_NAME-squashfs-sysupgrade.img || true
+          gzip -qdc *-ext4-factory.img.gz > $FIRMWARE_NAME-ext4-factory.img || true
+          gzip -qdc *-ext4-sysupgrade.img.gz > $FIRMWARE_NAME-ext4-sysupgrade.img || true
+          rm -f *.gz
+          echo "::set-output name=status::success" 
           
       - name: SSH connection to Actions
         uses: P3TERX/debugger-action@master
