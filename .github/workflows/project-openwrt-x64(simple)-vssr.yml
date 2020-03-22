@@ -14,7 +14,7 @@ on:
       - master
     paths:
       - '.github/workflows/project-openwrt-x64(simple)-vssr.yml'
-      - 'project-x64-simple-jo'
+      - 'project-x64-simple-vssr'
 
   watch:
     types: [started]
