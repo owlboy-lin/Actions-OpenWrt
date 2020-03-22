@@ -22,7 +22,7 @@ on:
 env:
   REPO_URL: https://github.com/project-openwrt/openwrt
   REPO_BRANCH: master
-  CONFIG_FILE: project-x64-simple-vssr
+  CONFIG_FILE: project-x64-all
   DIY_SH: diy.sh
   FIRMWARE_NAME: project-openwrt-x64-all
   TARGET: x86
@@ -115,5 +115,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@master
         with:
-          name: ${{ env.FIRMWARE_NAME }}-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}
+          name: ${{ env.FIRMWARE_NAME }}-${{ date -d "+8 hours" +%Y-%m-%d-%H%M%S }}
+          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
