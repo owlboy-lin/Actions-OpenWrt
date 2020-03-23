@@ -8,13 +8,13 @@
 name: project-openwrt-x64-all
 
 on:
-  schedule:
-    - cron: 0 20 * * *
+  # schedule:
+    # - cron: 0 20 * * *
   push:
     branches: 
       - master
     paths:
-      - '.github/workflows/project-openwrt-x64(all).yml'
+      - '.github/workflows/project-openwrt-x64-all.yml'
       - 'project-x64-all'
   watch:
     types: [started]
