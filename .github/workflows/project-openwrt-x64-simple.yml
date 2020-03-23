@@ -137,7 +137,7 @@ jobs:
           echo "##[set-output name=release_tag;]$release_tag"
       
       - name: SSH connection to Actions
-        uses: P3TERX/debugger-action@master
+        uses: owlboy-lin/debugger-action@master
         if: env.SSH_ACTIONS == 'true'      
     
       - name: Gz Files
@@ -157,7 +157,7 @@ jobs:
           sha256sum *.* > sha256sums
 
       - name: SSH connection to Actions
-        uses: P3TERX/debugger-action@master
+        uses: owlboy-lin/debugger-action@master
         if: env.SSH_ACTIONS == 'true'
           
       - name: Upload bin directory
