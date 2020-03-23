@@ -5,11 +5,11 @@
 # Author: P3TERX
 # Blog: https://p3terx.com
 #=================================================
-name: project-openwrt-x64(simple)-jo
+name: project-openwrt-x64-simple-jo
 
 on:
-  schedule:
-    - cron: 0 20 * * *
+  # schedule:
+    # - cron: 0 20 * * *
   push:
     branches: 
       - master
