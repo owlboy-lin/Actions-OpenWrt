@@ -180,7 +180,7 @@ jobs:
         uses: actions/upload-artifact@master
         if: steps.organize.outputs.status == 'success' && !cancelled()
         with:
-          name: ${{ steps.extract.outputs.release_tag }}
+          name: ${{ steps.rename.outputs.release_tag }}
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
           
 
