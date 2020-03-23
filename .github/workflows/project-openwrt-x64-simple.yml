@@ -116,13 +116,7 @@ jobs:
         if: steps.compile.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          gzip -qdc *-combined-squashfs.img.gz > *-combined-squashfs.img || true
-          gzip -qdc *-rootfs-squashfs.img.gz > *-rootfs-squashfs.img || true
-          gzip -qdc *-squashfs-factory.img.gz > *-squashfs-factory.img || true
-          gzip -qdc *-squashfs-sysupgrade.img.gz > *-squashfs-sysupgrade.img || true
-          gzip -qdc *-ext4-factory.img.gz > *-ext4-factory.img || true
-          gzip -qdc *-ext4-sysupgrade.img.gz > *-ext4-sysupgrade.img || true
-          gzip -qdc *-generic-rootfs.tar.gz > *-generic-rootfs.img || true
+          gzip -qdc *.img.gz > *.img || true
           rm -f *.gz
           echo "::set-output name=status::success" 
           
@@ -151,13 +145,7 @@ jobs:
         if: steps.rename.outputs.status == 'success' && !cancelled()
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          find . -name "*-combined-squashfs.img" | xargs -i {} tar -zcf {} *-combined-squashfs.img.gz || true
-          find . -name "*-rootfs-squashfs.img" | xargs -i {} tar -zcf {} *-rootfs-squashfs.img.gz || true
-          find . -name "*-squashfs-factory.img" | xargs -i {} tar -zcf {} *-squashfs-factory.img || true
-          find . -name "*-squashfs-sysupgrade.img" | xargs -i {} tar -zcf {} *-squashfs-sysupgrade.img || true
-          find . -name "*-ext4-factory.img" | xargs -i {} tar -zcf {} *-ext4-factory.img.gz || true
-          find . -name "*-ext4-sysupgrade.img" | xargs -i {} tar -zcf {} *-ext4-sysupgrade.img.gz || true
-          find . -name "*-generic-rootfs.img" | xargs -i {} tar -zcf {} *-generic-rootfs.img.gz || true
+          find . -name "*.img" | xargs -i {} tar -zcf {} *.img.gz
           rm -f *.img
           echo "::set-output name=status::success"
   
