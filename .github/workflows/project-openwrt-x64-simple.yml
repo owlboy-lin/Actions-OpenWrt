@@ -126,13 +126,13 @@ jobs:
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
           release_tag="$FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
-          find . -name "openwrt-$TARGET-$SUBTARGET-*.img" | xargs -i {} mv {} "${release_tag}-*.img"
-          find . -name "openwrt-$TARGET-$SUBTARGET-*.vmdk" | xargs -i {} mv {} "${release_tag}-*.vmdk"
-          find . -name "openwrt-$TARGET-$SUBTARGET-*.vhdx" | xargs -i {} mv {} "${release_tag}-*.vhdx"
-          find . -name "openwrt-$TARGET-$SUBTARGET-*.vdi" | xargs -i {} mv {} "${release_tag}-*.vdi"
-          find . -name "openwrt-$TARGET-$SUBTARGET-*.qcow2" | xargs -i {} mv {} "${release_tag}-*.qcow2"
-          find . -name "openwrt-$TARGET-$SUBTARGET*.manifest" | xargs -i {} mv {} "${release_tag}*.manifest"
-          find . -name "openwrt-$TARGET-$SUBTARGET*.vmlinuz" | xargs -i {} mv {} "${release_tag}*.vmlinuz"
+          find . -name "openwrt-$TARGET-$SUBTARGET-*.img" | xargs -i mv {} "${release_tag}-*.img"
+          find . -name "openwrt-$TARGET-$SUBTARGET-*.vmdk" | xargs -i mv {} "${release_tag}-*.vmdk"
+          find . -name "openwrt-$TARGET-$SUBTARGET-*.vhdx" | xargs -i mv {} "${release_tag}-*.vhdx"
+          find . -name "openwrt-$TARGET-$SUBTARGET-*.vdi" | xargs -i mv {} "${release_tag}-*.vdi"
+          find . -name "openwrt-$TARGET-$SUBTARGET-*.qcow2" | xargs -i mv {} "${release_tag}-*.qcow2"
+          find . -name "openwrt-$TARGET-$SUBTARGET*.manifest" | xargs -i mv {} "${release_tag}*.manifest"
+          find . -name "openwrt-$TARGET-$SUBTARGET*.vmlinuz" | xargs -i mv {} "${release_tag}*.vmlinuz"
           echo "::set-output name=status::success"
           echo "##[set-output name=release_tag;]$release_tag"
       
