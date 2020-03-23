@@ -28,7 +28,7 @@ env:
   FIRMWARE_NAME: project-openwrt-x64-simple-vssr
   TARGET: x86
   SUBTARGET: 64
-  SSH_ACTIONS: false
+  SSH_ACTIONS: true
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   TZ: Asia/Shanghai
@@ -151,7 +151,14 @@ jobs:
           find . -name "*-combined-squashfs.qcow2" | xargs -i {} mv {} "${release_tag}-combined-squashfs.qcow2" || true
           echo "::set-output name=status::success"
           echo "##[set-output name=release_tag;]$release_tag"
-          
+      
+
+      - name: SSH connection to Actions
+        uses: P3TERX/debugger-action@master
+        if: env.SSH_ACTIONS == 'true'      
+      
+      
+      
       - name: Gz Files
         id: Gzip_file
         if: steps.rename.outputs.status == 'success'
