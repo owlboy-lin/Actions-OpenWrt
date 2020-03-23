@@ -205,7 +205,7 @@ jobs:
         uses: actions/upload-artifact@master
         if: steps.organize.outputs.status == 'success' && !cancelled()
         with:
-          name: ${{ env.FIRMWARE_NAME }}
+          name: ${{ release_tag }}
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
           
 
