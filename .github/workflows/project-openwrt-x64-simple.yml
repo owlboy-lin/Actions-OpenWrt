@@ -1,0 +1,210 @@
+#=================================================
+# https://github.com/P3TERX/Actions-OpenWrt
+# Description: Build OpenWrt using GitHub Actions
+# Lisence: MIT
+# Author: P3TERX
+# Blog: https://p3terx.com
+#=================================================
+name: project-openwrt-x64-simple
+on:
+  schedule:
+    - cron: 0 20 * * *
+  push:
+    branches: 
+      - master
+    paths:
+      - '.github/workflows/project-openwrt-x64-simple.yml'
+      - 'project-x64-simple'
+
+  watch:
+    types: [started]
+
+
+env:
+  REPO_URL: https://github.com/project-openwrt/openwrt
+  REPO_BRANCH: master
+  CONFIG_FILE: project-x64-simple
+  DIY_SH: diy.sh
+  FIRMWARE_NAME: project-openwrt-x64-simple
+  TARGET: x86
+  SUBTARGET: 64
+  SSH_ACTIONS: true
+  UPLOAD_BIN_DIR: false
+  UPLOAD_FIRMWARE: true
+  TZ: Asia/Shanghai
+
+  
+  # FREE_UP_DISK: true
+  # UPLOAD_EXT4_IMAGES: true
+  # UPLOAD_SQUASHFS_IMAGES: true
+  # UPLOAD_ROOTFS: true
+  # UPLOAD_TMP_LINK: true
+
+
+jobs:
+  
+  build:
+    
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          ref: master
+
+      - name: Space cleanup
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          docker rmi `docker images -q`
+          sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d
+          sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php*
+          sudo -E apt-get update
+          sudo -E apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs gcc-multilib g++-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler
+          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get clean
+
+          # 利用挂载在 /mnt/ 的 14G 额外空间:
+          # sudo mkdir -p -m 777 /mnt/openwrt/bin /mnt/openwrt/build_dir/host /mnt/openwrt/build_dir/hostpkg /mnt/openwrt/dl /mnt/openwrt/feeds /mnt/openwrt/staging_dir
+          # ln -s /mnt/openwrt/bin ./bin
+          # mkdir -p ./build_dir/host && ln -s /mnt/openwrt/build_dir/host ./build_dir/host
+          # mkdir -p ./build_dir/host && ln -s /mnt/openwrt/build_dir/hostpkg ./build_dir/hostpkg
+          # ln -s /mnt/openwrt/dl ./dl
+          # ln -s /mnt/openwrt/feeds ./feeds
+          # ln -s /mnt/openwrt/staging_dir ./staging_dir
+
+          df -h
+    
+      - name: Clone source code
+        run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+
+      - name: Update feeds
+        run: cd openwrt && ./scripts/feeds update -a
+
+      - name: Install feeds
+        run: cd openwrt && ./scripts/feeds install -a
+
+      - name: Load custom configuration
+        run: |
+          [ -e files ] && mv files openwrt/files
+          [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+          chmod +x $DIY_SH
+          cd openwrt
+          ../$DIY_SH
+
+      - name: Download package
+        id: package
+        run: |
+          cd openwrt
+          make defconfig
+          make download -j8
+          find dl -size -1024c -exec ls -l {} \;
+          find dl -size -1024c -exec rm -f {} \;
+
+      - name: Compile the firmware
+        id: compile
+        run: |
+          cd openwrt
+          echo -e "$(nproc) thread compile"
+          make -j$(nproc) || make -j1 V=s
+          echo "::set-output name=status::success"
+      
+      - name: Extract Gz Files
+        id: extract
+        if: steps.compile.outputs.status == 'success'
+        run: |
+          cd openwrt/bin/targets/$TARGET/$SUBTARGET
+          gzip -qdc *-combined-squashfs.img.gz > *-combined-squashfs.img || true
+          gzip -qdc *-rootfs-squashfs.img.gz > *-rootfs-squashfs.img || true
+          gzip -qdc *-squashfs-factory.img.gz > *-squashfs-factory.img || true
+          gzip -qdc *-squashfs-sysupgrade.img.gz > *-squashfs-sysupgrade.img || true
+          gzip -qdc *-ext4-factory.img.gz > *-ext4-factory.img || true
+          gzip -qdc *-ext4-sysupgrade.img.gz > *-ext4-sysupgrade.img || true
+          gzip -qdc *-generic-rootfs.tar.gz > *-generic-rootfs.img || true
+          rm -f *.gz
+          echo "::set-output name=status::success" 
+          
+      - name: rename For file
+        id: rename
+        if: steps.extract.outputs.status == 'success'
+        run: |
+          cd openwrt/bin/targets/$TARGET/$SUBTARGET
+          release_tag="${{ env.FIRMWARE_NAME }}-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
+          find . -name "*-combined-squashfs.img" | xargs -i {} mv {} "${release_tag}-combined-squashfs.img" || true
+          find . -name "*-rootfs-squashfs.img" | xargs -i {} mv {} "${release_tag}-rootfs-squashfs.img" || true
+          find . -name "*-squashfs-factory.img" | xargs -i {} mv {} "${release_tag}-squashfs-factory.img" || true
+          find . -name "*-squashfs-sysupgrade.img" | xargs -i mv {} "${release_tag}-squashfs-sysupgrade.img" || true
+          find . -name "*-ext4-factory.img" | xargs -i {} mv {} "${release_tag}-ext4-factory.img" || true
+          find . -name "*-ext4-sysupgrade.img" | xargs -i {} mv {} "${release_tag}-ext4-sysupgrade.img" || true
+          find . -name "*-uefi-gpt-squashfs.img" | xargs -i {} mv {} "${release_tag}-uefi-gpt-squashfs.img" || true
+          find . -name "*-generic-rootfs.img" | xargs -i {} mv {} "${release_tag}-generic-rootfs.img" || true
+          find . -name "*-uefi-gpt-squashfs.vmdk" | xargs -i {} mv {} "${release_tag}-uefi-gpt-squashfs.vmdk" || true
+          find . -name "*-uefi-gpt-squashfs.vhdx" | xargs -i {} mv {} "${release_tag}-uefi-gpt-squashfs.vhdx" || true
+          find . -name "*-uefi-gpt-squashfs.vdi" | xargs -i {} mv {} "${release_tag}-uefi-gpt-squashfs.vdi" || true
+          find . -name "*-uefi-gpt-squashfs.qcow2" | xargs -i {} mv {} "${release_tag}uefi-gpt-squashfs.qcow2" || true
+          find . -name "*-generic.manifest" | xargs -i {} mv {} "${release_tag}-generic.manifest" || true
+          find . -name "*-combined-squashfs.vmdk" | xargs -i {} mv {} "${release_tag}-combined-squashfs.vmdk" || true
+          find . -name "*-combined-squashfs.vhdx" | xargs -i {} mv {} "${release_tag}-combined-squashfs.vhdx" || true
+          find . -name "*--combined-squashfs.vdi" | xargs -i {} mv {} "${release_tag}-combined-squashfs.vdi" || true
+          find . -name "*-combined-squashfs.qcow2" | xargs -i {} mv {} "${release_tag}-combined-squashfs.qcow2" || true
+          echo "::set-output name=status::success"
+          echo "##[set-output name=release_tag;]$release_tag"
+      
+
+      - name: SSH connection to Actions
+        uses: P3TERX/debugger-action@master
+        if: env.SSH_ACTIONS == 'true'      
+      
+      
+      
+      - name: Gz Files
+        id: Gzip_file
+        if: steps.rename.outputs.status == 'success'
+        run: |
+          cd openwrt/bin/targets/$TARGET/$SUBTARGET
+          find . -name "*-combined-squashfs.img" | xargs -i {} tar -zcf {} *-combined-squashfs.img.gz || true
+          find . -name "*-rootfs-squashfs.img" | xargs -i {} tar -zcf {} *-rootfs-squashfs.img.gz || true
+          find . -name "*-squashfs-factory.img" | xargs -i {} tar -zcf {} *-squashfs-factory.img || true
+          find . -name "*-squashfs-sysupgrade.img" | xargs -i {} tar -zcf {} *-squashfs-sysupgrade.img || true
+          find . -name "*-ext4-factory.img" | xargs -i {} tar -zcf {} *-ext4-factory.img.gz || true
+          find . -name "*-ext4-sysupgrade.img" | xargs -i {} tar -zcf {} *-ext4-sysupgrade.img.gz || true
+          find . -name "*-generic-rootfs.img" | xargs -i {} tar -zcf {} *-generic-rootfs.img.gz || true
+          rm -f *.img
+          echo "::set-output name=status::success"
+  
+      - name: Generate Sha256sum File For Images
+        if: steps.Gzip_file.outputs.status == 'success'
+        run: |
+          cd openwrt/bin/targets/$TARGET/$SUBTARGET
+          mv sha256sums sha256sums.orig
+          sha256sum *.* > sha256sums
+
+      - name: SSH connection to Actions
+        uses: P3TERX/debugger-action@master
+        if: env.SSH_ACTIONS == 'true'
+          
+      - name: Upload bin directory
+        uses: actions/upload-artifact@master
+        if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+        with:
+          name: openwrt-bin
+          path: openwrt/bin/
+          
+      - name: Organize files
+        id: organize
+        if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+        run: |
+          cd openwrt/bin/targets/*/*
+          rm -rf packages
+          echo "::set-output name=status::success"
+                    
+      - name: Upload firmware directory
+        uses: actions/upload-artifact@master
+        if: steps.organize.outputs.status == 'success' && !cancelled()
+        with:
+          name: ${{ env.FIRMWARE_NAME }}
+          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
+          
+
