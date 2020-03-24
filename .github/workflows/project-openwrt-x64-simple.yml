@@ -159,7 +159,7 @@ jobs:
     
       - name: Gz Files
         id: Gzip_file
-        if: steps.rename.outputs.status == 'success' && !cancelled()
+        if: steps.rename.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
           find . -name "*.img"|xargs -I {} tar zcvf {}.gz {}
@@ -186,7 +186,7 @@ jobs:
           
       - name: Organize files
         id: organize
-        if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+        if: env.UPLOAD_FIRMWARE == 'true'
         run: |
           cd openwrt/bin/targets/*/*
           rm -rf packages
@@ -195,7 +195,7 @@ jobs:
                     
       - name: Upload firmware directory
         uses: actions/upload-artifact@master
-        if: steps.organize.outputs.status == 'success' && !cancelled()
+        if: steps.organize.outputs.status == 'success'
         with:
           name: ${{ steps.rename.outputs.release_tag }}
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
