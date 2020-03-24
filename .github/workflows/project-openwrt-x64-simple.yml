@@ -161,8 +161,7 @@ jobs:
         if: steps.rename.outputs.status == 'success' && !cancelled()
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          find . -name "*.img" | xargs -i {} tar -zcf {} *.img.gz
-          rm -f *.img
+          find -name "*.img" | xargs -i {} tar -zcf {} *.img.gz
           echo "::set-output name=status::success"
   
       - name: Generate Sha256sum File For Images
