@@ -123,6 +123,7 @@ jobs:
           gzip -d *-ext4-factory.img.gz > *-ext4-factory.img || true
           gzip -d *-ext4-sysupgrade.img.gz > *-ext4-sysupgrade.img || true
           gzip -d *-generic-rootfs.tar.gz > *-generic-rootfs.img || true
+          rm -f *.img.gz
           echo "::set-output name=status::success" 
           
       - name: rename For file
@@ -161,7 +162,8 @@ jobs:
         if: steps.rename.outputs.status == 'success' && !cancelled()
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          find -name "*.img" | xargs -i {} tar -zcf {} *.img.gz
+          find . -name "*.img"|xargs -I {} tar zcvf {}.gz {}
+          rm -f *.img
           echo "::set-output name=status::success"
   
       - name: Generate Sha256sum File For Images
