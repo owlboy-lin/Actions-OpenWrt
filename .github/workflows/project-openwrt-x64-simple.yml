@@ -116,8 +116,13 @@ jobs:
         if: steps.compile.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          gzip -qdc *.img.gz > *.img || true
-          rm -f *.gz
+          gzip -d *-combined-squashfs.img.gz > *-combined-squashfs.img || true
+          gzip -d *-rootfs-squashfs.img.gz > *-rootfs-squashfs.img || true
+          gzip -d *-squashfs-factory.img.gz > *-squashfs-factory.img || true
+          gzip -d *-squashfs-sysupgrade.img.gz > *-squashfs-sysupgrade.img || true
+          gzip -d *-ext4-factory.img.gz > *-ext4-factory.img || true
+          gzip -d *-ext4-sysupgrade.img.gz > *-ext4-sysupgrade.img || true
+          gzip -d *-generic-rootfs.tar.gz > *-generic-rootfs.img || true
           echo "::set-output name=status::success" 
           
       - name: rename For file
@@ -125,14 +130,25 @@ jobs:
         if: steps.extract.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          release_tag="$FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
-          find . -name "openwrt-$TARGET-$SUBTARGET-*.img" | xargs -i mv {} "${release_tag}-*.img" || true
-          find . -name "openwrt-$TARGET-$SUBTARGET-*.vmdk" | xargs -i mv {} "${release_tag}-*.vmdk" || true
-          find . -name "openwrt-$TARGET-$SUBTARGET-*.vhdx" | xargs -i mv {} "${release_tag}-*.vhdx" || true
-          find . -name "openwrt-$TARGET-$SUBTARGET-*.vdi" | xargs -i mv {} "${release_tag}-*.vdi" || true
-          find . -name "openwrt-$TARGET-$SUBTARGET-*.qcow2" | xargs -i mv {} "${release_tag}-*.qcow2" || true
-          find . -name "openwrt-$TARGET-$SUBTARGET*.manifest" | xargs -i mv {} "${release_tag}*.manifest" || true
-          find . -name "openwrt-$TARGET-$SUBTARGET*.vmlinuz" | xargs -i mv {} "${release_tag}*.vmlinuz" || true
+          release_tag="${FIRMWARE_NAME}-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
+          find -name "*-combined-squashfs*.img" -exec mv {} "${release_tag}-combined-squashfs*.img" \； || true
+          find -name "*-rootfs-squashfs*.img" -exec mv {} "${release_tag}-rootfs-squashfs*.img" \； || true
+          find -name "*-squashfs-factory*.img" -exec mv {} "${release_tag}-squashfs-factory.img" \； || true
+          find -name "*-squashfs-sysupgrade*.img" -exec mv {} "${release_tag}-squashfs-sysupgrade.img" \； || true
+          find -name "*-ext4-factory*.img" -exec mv {} "${release_tag}-ext4-factory.img" \； || true
+          find -name "*-ext4-sysupgrade*.img" -exec mv {} "${release_tag}-ext4-sysupgrade.img" \； || true
+          find -name "*-uefi-gpt-squashfs*.img" -exec mv {} "${release_tag}-uefi-gpt-squashfs.img" \； || true
+          find -name "*-generic-rootfs*.img" -exec mv {} "${release_tag}-generic-rootfs.img" \； || true
+          find -name "*-uefi-gpt-squashfs*.vmdk" -exec mv {} "${release_tag}-uefi-gpt-squashfs.vmdk" \； || true
+          find -name "*-uefi-gpt-squashfs*.vhdx" -exec mv {} "${release_tag}-uefi-gpt-squashfs.vhdx" \； || true
+          find -name "*-uefi-gpt-squashfs*.vdi" -exec mv {} "${release_tag}-uefi-gpt-squashfs.vdi" \； || true
+          find -name "*-uefi-gpt-squashfs*.qcow2" -exec mv {} "${release_tag}uefi-gpt-squashfs.qcow2" \； || true
+          find -name "*-generic.manifest" -exec mv {} "${release_tag}-generic.manifest" \； || true
+          find -name "*-vmlinuz" -exec mv {} "${release_tag}-vmlinuz" \； || true
+          find -name "*-combined-squashfs*.vmdk" -exec mv {} "${release_tag}-combined-squashfs*.vmdk" \； || true
+          find -name "*-combined-squashfs*.vhdx" -exec mv {} "${release_tag}-combined-squashfs*.vhdx" \； || true
+          find -name "*--combined-squashfs*.vdi" -exec mv {} "${release_tag}-combined-squashfs*.vdi" \； || true
+          find -name "*-combined-squashfs*.qcow2" -exec mv {} "${release_tag}-combined-squashfs*.qcow2" \； || true
           echo "::set-output name=status::success"
           echo "##[set-output name=release_tag;]$release_tag"
       
