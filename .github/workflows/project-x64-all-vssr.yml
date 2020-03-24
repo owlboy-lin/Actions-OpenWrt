@@ -8,8 +8,8 @@
 name: project-openwrt-x64(all)-vssr
 
 on:
-  schedule:
-    - cron: 0 20 * * *
+  # schedule:
+    # - cron: 0 20 * * *
   # push:
     # branches: 
       # - master
