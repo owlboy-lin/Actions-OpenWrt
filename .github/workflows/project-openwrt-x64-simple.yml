@@ -116,13 +116,7 @@ jobs:
         if: steps.compile.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          gzip -d *-combined-squashfs.img.gz > *-combined-squashfs.img || true
-          gzip -d *-rootfs-squashfs.img.gz > *-rootfs-squashfs.img || true
-          gzip -d *-squashfs-factory.img.gz > *-squashfs-factory.img || true
-          gzip -d *-squashfs-sysupgrade.img.gz > *-squashfs-sysupgrade.img || true
-          gzip -d *-ext4-factory.img.gz > *-ext4-factory.img || true
-          gzip -d *-ext4-sysupgrade.img.gz > *-ext4-sysupgrade.img || true
-          gzip -d *-generic-rootfs.tar.gz > *-generic-rootfs.img || true
+          find . -name "*.img.gz"|xargs -I {} tar -xzvf {}
           rm -f *.img.gz
           echo "::set-output name=status::success" 
           
