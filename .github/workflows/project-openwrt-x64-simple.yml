@@ -126,24 +126,7 @@ jobs:
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
           release_tag="${FIRMWARE_NAME}-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
-          find -name "*-combined-squashfs*.img" -exec mv {} "${release_tag}-combined-squashfs*.img" \； || true
-          find -name "*-rootfs-squashfs*.img" -exec mv {} "${release_tag}-rootfs-squashfs*.img" \； || true
-          find -name "*-squashfs-factory*.img" -exec mv {} "${release_tag}-squashfs-factory.img" \； || true
-          find -name "*-squashfs-sysupgrade*.img" -exec mv {} "${release_tag}-squashfs-sysupgrade.img" \； || true
-          find -name "*-ext4-factory*.img" -exec mv {} "${release_tag}-ext4-factory.img" \； || true
-          find -name "*-ext4-sysupgrade*.img" -exec mv {} "${release_tag}-ext4-sysupgrade.img" \； || true
-          find -name "*-uefi-gpt-squashfs*.img" -exec mv {} "${release_tag}-uefi-gpt-squashfs.img" \； || true
-          find -name "*-generic-rootfs*.img" -exec mv {} "${release_tag}-generic-rootfs.img" \； || true
-          find -name "*-uefi-gpt-squashfs*.vmdk" -exec mv {} "${release_tag}-uefi-gpt-squashfs.vmdk" \； || true
-          find -name "*-uefi-gpt-squashfs*.vhdx" -exec mv {} "${release_tag}-uefi-gpt-squashfs.vhdx" \； || true
-          find -name "*-uefi-gpt-squashfs*.vdi" -exec mv {} "${release_tag}-uefi-gpt-squashfs.vdi" \； || true
-          find -name "*-uefi-gpt-squashfs*.qcow2" -exec mv {} "${release_tag}uefi-gpt-squashfs.qcow2" \； || true
-          find -name "*-generic.manifest" -exec mv {} "${release_tag}-generic.manifest" \； || true
-          find -name "*-vmlinuz" -exec mv {} "${release_tag}-vmlinuz" \； || true
-          find -name "*-combined-squashfs*.vmdk" -exec mv {} "${release_tag}-combined-squashfs*.vmdk" \； || true
-          find -name "*-combined-squashfs*.vhdx" -exec mv {} "${release_tag}-combined-squashfs*.vhdx" \； || true
-          find -name "*--combined-squashfs*.vdi" -exec mv {} "${release_tag}-combined-squashfs*.vdi" \； || true
-          find -name "*-combined-squashfs*.qcow2" -exec mv {} "${release_tag}-combined-squashfs*.qcow2" \； || true
+          for i in *.img; do mv -f $i `echo $i | sed 's/^openwrt-${{ env.TARGET }}-${{ SUBTARGET }}/${{ release_tag}}/'`; done
           echo "::set-output name=status::success"
           echo "##[set-output name=release_tag;]$release_tag"
       
