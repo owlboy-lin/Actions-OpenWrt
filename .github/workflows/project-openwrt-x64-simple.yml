@@ -116,7 +116,7 @@ jobs:
         if: steps.compile.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          find . -name "*.img.gz"|xargs -I {} tar -xzvf {}
+          find . -name "*.img.gz"|xargs -I {} tar -xzf {}
           rm -f *.img.gz
           echo "::set-output name=status::success" 
           
