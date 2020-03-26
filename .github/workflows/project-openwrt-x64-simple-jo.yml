@@ -76,8 +76,7 @@ jobs:
           # ln -s /mnt/openwrt/staging_dir ./staging_dir
 
           df -h
-      
-          
+    
       - name: Clone source code
         run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
 
@@ -95,7 +94,6 @@ jobs:
           cd openwrt
           ../$DIY_SH
 
-
       - name: Download package
         id: package
         run: |
@@ -112,67 +110,70 @@ jobs:
           echo -e "$(nproc) thread compile"
           make -j$(nproc) || make -j1 V=s
           echo "::set-output name=status::success"
-
-      - name: Upload bin directory
-        uses: actions/upload-artifact@master
-        if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
-        with:
-          name: OpenWrt_bin
-          path: openwrt/bin
-          
-      - name: Organize files
-        id: organize
-        if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
-        run: |
-          cd openwrt/bin/targets/*/*
-          rm -rf packages
-          echo "::set-env name=FIRMWARE::$PWD"
-          echo "::set-output name=status::success"
-          
+      
       - name: Extract Gz Files
         id: extract
-        if: steps.organize.outputs.status == 'success'
+        if: steps.compile.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          gzip -qdc *-combined-squashfs.img.gz > $FIRMWARE_NAME-combined-squashfs.img || true
-          gzip -qdc *-rootfs-squashfs.img.gz > $FIRMWARE_NAME-rootfs-squashfs.img || true
-          gzip -qdc *-squashfs-factory.img.gz > $FIRMWARE_NAME-squashfs-factory.img || true
-          gzip -qdc *-squashfs-sysupgrade.img.gz > $FIRMWARE_NAME-squashfs-sysupgrade.img || true
-          gzip -qdc *-ext4-factory.img.gz > $FIRMWARE_NAME-ext4-factory.img || true
-          gzip -qdc *-ext4-sysupgrade.img.gz > $FIRMWARE_NAME-ext4-sysupgrade.img || true
-          echo "::set-output name=status::success"          
-   
-      - name: Gz Files
-        id: Gzip_file
+          gzip -qd *.img.gz
+          rm -f *.img.gz
+          echo "::set-output name=status::success" 
+          
+      - name: rename For file
+        id: rename
         if: steps.extract.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          release_tag="$FIRMWARE_NAME-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
-          tar -zcf "${release_tag}-combined-squashfs.img.gz" $FIRMWARE_NAME-combined-squashfs.img
-          tar -zcf "${release_tag}-rootfs-squashfs.img.gz" $FIRMWARE_NAME-rootfs-squashfs.img
-          tar -zcf "${release_tag}-squashfs-factory.img.gz" $FIRMWARE_NAME-squashfs-factory.img
-          tar -zcf "${release_tag}-squashfs-sysupgrade.img.gz" $FIRMWARE_NAME-squashfs-sysupgrade.img
-          tar -zcf "${release_tag}-ext4-factory.img" $FIRMWARE_NAME-ext4-factory.img
-          tar -zcf "${release_tag}-ext4-sysupgrade.img.gz" $FIRMWARE_NAME-ext4-sysupgrade.img
+          release_tag="${FIRMWARE_NAME}-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
+          for i in openwrt*; do mv -f $i `echo $i | sed "s/^openwrt-${{ env.TARGET }}-${{ env.SUBTARGET }}/${release_tag}/"`; done
+          echo "::set-output name=status::success"
           echo "##[set-output name=release_tag;]$release_tag"
-          
+      
+      - name: SSH connection to Actions
+        uses: owlboy-lin/debugger-action@master
+        if: env.SSH_ACTIONS == 'true'      
+    
+      - name: Gz Files
+        id: Gzip_file
+        if: steps.rename.outputs.status == 'success'
+        run: |
+          cd openwrt/bin/targets/$TARGET/$SUBTARGET
+          find . -name "*.img"|xargs -I {} tar zcvf {}.gz {}
+          rm -f *.img
+          echo "::set-output name=status::success"
+  
       - name: Generate Sha256sum File For Images
         if: steps.Gzip_file.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
           mv sha256sums sha256sums.orig
-          sha256sum *.img > sha256sums
-
+          sha256sum *.* > sha256sums
 
       - name: SSH connection to Actions
-        uses: P3TERX/debugger-action@master
+        uses: owlboy-lin/debugger-action@master
         if: env.SSH_ACTIONS == 'true'
           
+      - name: Upload bin directory
+        uses: actions/upload-artifact@master
+        if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+        with:
+          name: openwrt-bin
+          path: openwrt/bin/
+          
+      - name: Organize files
+        id: organize
+        if: env.UPLOAD_FIRMWARE == 'true'
+        run: |
+          cd openwrt/bin/targets/*/*
+          rm -rf packages
+          echo "::set-env name=FIRMWARE::$PWD"
+          echo "::set-output name=status::success"
+                    
       - name: Upload firmware directory
         uses: actions/upload-artifact@master
-        if: steps.Gzip_file.outputs.status == 'success'
+        if: steps.organize.outputs.status == 'success'
         with:
-          name: ${{ steps.zip_file.outputs.release_tag }}
+          name: ${{ steps.rename.outputs.release_tag }}
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
           
-
