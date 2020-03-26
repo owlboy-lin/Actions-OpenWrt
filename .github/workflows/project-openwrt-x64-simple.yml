@@ -23,9 +23,10 @@ on:
 env:
   REPO_URL: https://github.com/project-openwrt/openwrt
   REPO_BRANCH: master
+  FIRMWARE_NAME: project-openwrt-x64-simple
+  DATE: $(date -d "+8 hours" +%Y-%m-%d-%H%M%S)
   CONFIG_FILE: project-x64-simple
   DIY_SH: diy.sh
-  FIRMWARE_NAME: project-openwrt-x64-simple
   TARGET: x86
   SUBTARGET: 64
   SSH_ACTIONS: false
