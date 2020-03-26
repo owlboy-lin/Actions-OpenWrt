@@ -116,14 +116,8 @@ jobs:
         if: steps.compile.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          gzip -qdc *-combined-squashfs.img.gz > *-combined-squashfs.img || true
-          gzip -qdc *-rootfs-squashfs.img.gz > *-rootfs-squashfs.img || true
-          gzip -qdc *-squashfs-factory.img.gz > *-squashfs-factory.img || true
-          gzip -qdc *-squashfs-sysupgrade.img.gz > *-squashfs-sysupgrade.img || true
-          gzip -qdc *-ext4-factory.img.gz > *-ext4-factory.img || true
-          gzip -qdc *-ext4-sysupgrade.img.gz > *-ext4-sysupgrade.img || true
-          gzip -qdc *-generic-rootfs.tar.gz > *-generic-rootfs.img || true
-          rm -f *.gz
+          gzip -qd *.img.gz
+          rm -f *.img.gz
           echo "::set-output name=status::success" 
           
       - name: rename For file
@@ -131,47 +125,21 @@ jobs:
         if: steps.extract.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          release_tag="${{ env.FIRMWARE_NAME }}-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
-          find . -name "*-combined-squashfs*.img" | xargs -i {} mv {} "${release_tag}-combined-squashfs*.img"
-          find . -name "*-rootfs-squashfs*.img" | xargs -i {} mv {} "${release_tag}-rootfs-squashfs*.img"
-          find . -name "*-squashfs-factory*.img" | xargs -i {} mv {} "${release_tag}-squashfs-factory.img"
-          find . -name "*-squashfs-sysupgrade*.img" | xargs -i mv {} "${release_tag}-squashfs-sysupgrade.img"
-          find . -name "*-ext4-factory*.img" | xargs -i {} mv {} "${release_tag}-ext4-factory.img"
-          find . -name "*-ext4-sysupgrade*.img" | xargs -i {} mv {} "${release_tag}-ext4-sysupgrade.img"
-          find . -name "*-uefi-gpt-squashfs*.img" | xargs -i {} mv {} "${release_tag}-uefi-gpt-squashfs.img"
-          find . -name "*-generic-rootfs*.img" | xargs -i {} mv {} "${release_tag}-generic-rootfs.img"
-          find . -name "*-uefi-gpt-squashfs*.vmdk" | xargs -i {} mv {} "${release_tag}-uefi-gpt-squashfs.vmdk"
-          find . -name "*-uefi-gpt-squashfs*.vhdx" | xargs -i {} mv {} "${release_tag}-uefi-gpt-squashfs.vhdx"
-          find . -name "*-uefi-gpt-squashfs*.vdi" | xargs -i {} mv {} "${release_tag}-uefi-gpt-squashfs.vdi"
-          find . -name "*-uefi-gpt-squashfs*.qcow2" | xargs -i {} mv {} "${release_tag}uefi-gpt-squashfs.qcow2"
-          find . -name "*-generic.manifest" | xargs -i {} mv {} "${release_tag}-generic.manifest"
-          find . -name "*-vmlinuz" | xargs -i {} mv {} "${release_tag}-vmlinuz"
-          find . -name "*-combined-squashfs*.vmdk" | xargs -i {} mv {} "${release_tag}-combined-squashfs*.vmdk"
-          find . -name "*-combined-squashfs*.vhdx" | xargs -i {} mv {} "${release_tag}-combined-squashfs*.vhdx"
-          find . -name "*--combined-squashfs*.vdi" | xargs -i {} mv {} "${release_tag}-combined-squashfs*.vdi"
-          find . -name "*-combined-squashfs*.qcow2" | xargs -i {} mv {} "${release_tag}-combined-squashfs*.qcow2"
+          release_tag="${FIRMWARE_NAME}-$(date -d "+8 hours" +%Y-%m-%d-%H%M%S)"
+          for i in openwrt*; do mv -f $i `echo $i | sed "s/^openwrt-${{ env.TARGET }}-${{ env.SUBTARGET }}/${release_tag}/"`; done
           echo "::set-output name=status::success"
           echo "##[set-output name=release_tag;]$release_tag"
       
-
       - name: SSH connection to Actions
-        uses: P3TERX/debugger-action@master
+        uses: owlboy-lin/debugger-action@master
         if: env.SSH_ACTIONS == 'true'      
-      
-      
-      
+    
       - name: Gz Files
         id: Gzip_file
         if: steps.rename.outputs.status == 'success'
         run: |
           cd openwrt/bin/targets/$TARGET/$SUBTARGET
-          find . -name "*-combined-squashfs.img" | xargs -i {} tar -zcf {} *-combined-squashfs.img.gz || true
-          find . -name "*-rootfs-squashfs.img" | xargs -i {} tar -zcf {} *-rootfs-squashfs.img.gz || true
-          find . -name "*-squashfs-factory.img" | xargs -i {} tar -zcf {} *-squashfs-factory.img || true
-          find . -name "*-squashfs-sysupgrade.img" | xargs -i {} tar -zcf {} *-squashfs-sysupgrade.img || true
-          find . -name "*-ext4-factory.img" | xargs -i {} tar -zcf {} *-ext4-factory.img.gz || true
-          find . -name "*-ext4-sysupgrade.img" | xargs -i {} tar -zcf {} *-ext4-sysupgrade.img.gz || true
-          find . -name "*-generic-rootfs.img" | xargs -i {} tar -zcf {} *-generic-rootfs.img.gz || true
+          find . -name "*.img"|xargs -I {} tar zcvf {}.gz {}
           rm -f *.img
           echo "::set-output name=status::success"
   
@@ -183,7 +151,7 @@ jobs:
           sha256sum *.* > sha256sums
 
       - name: SSH connection to Actions
-        uses: P3TERX/debugger-action@master
+        uses: owlboy-lin/debugger-action@master
         if: env.SSH_ACTIONS == 'true'
           
       - name: Upload bin directory
@@ -195,17 +163,17 @@ jobs:
           
       - name: Organize files
         id: organize
-        if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+        if: env.UPLOAD_FIRMWARE == 'true'
         run: |
           cd openwrt/bin/targets/*/*
           rm -rf packages
+          echo "::set-env name=FIRMWARE::$PWD"
           echo "::set-output name=status::success"
                     
       - name: Upload firmware directory
         uses: actions/upload-artifact@master
-        if: steps.organize.outputs.status == 'success' && !cancelled()
+        if: steps.organize.outputs.status == 'success'
         with:
-          name: ${{ env.FIRMWARE_NAME }}
+          name: ${{ steps.rename.outputs.release_tag }}
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
           
-
