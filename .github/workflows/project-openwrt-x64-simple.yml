@@ -180,39 +180,43 @@ jobs:
           # path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
           path: ${{ env.FIRMWARE }}
           
-      # - name: Create release
-        # uses: softprops/action-gh-release@v1
-        # env:
-          # GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        # with:
-          # tag_name: ${{ env.RELEASE_TAG }}
-          # body: 🚀 Automated build | 自动编译
+      - name: Generate tag
+        run: |
+          echo ::set-env name=RELEASE_TAG::"$(TZ=UTC-8 date +"%Y.%m.%d")"
           
-      # - name: Upload to release
-        # uses: softprops/action-gh-release@v1
-        # if: env.UPLOAD_RELEASE == 'true' && startsWith(github.ref, 'refs/tags/')
-        # env:
-          # GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        # with:
-          # files: ${{ env.FIRMWARE }}/*
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          body: 🚀 Automated build | 自动编译
+          
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        if: env.UPLOAD_RELEASE == 'true' && startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          files: ${{ env.FIRMWARE }}/*
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        with:
-          tag_name: ${{ steps.rename.outputs.release_tag }}
-          release_name: 自动发布 ${{ steps.rename.outputs.release_tag }}
-          draft: false
-          prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ${{ env.FIRMWARE }}/*
-          asset_name: ${{ steps.rename.outputs.release_tag }}
-          asset_content_type: ${{ env.FIRMWARE }}/*
+#      - name: Create Release
+#        id: create_release
+#        uses: actions/create-release@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+#        with:
+#          tag_name: ${{ steps.rename.outputs.release_tag }}
+#          release_name: 自动发布 ${{ steps.rename.outputs.release_tag }}
+#          draft: false
+#          prerelease: false
+#      - name: Upload Release Asset
+#        id: upload-release-asset 
+#        uses: actions/upload-release-asset@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+#        with:
+#          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+#          asset_path: ${{ env.FIRMWARE }}/*
+#          asset_name: ${{ steps.rename.outputs.release_tag }}
+#          asset_content_type: ${{ env.FIRMWARE }}/*
