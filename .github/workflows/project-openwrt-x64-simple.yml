@@ -177,7 +177,8 @@ jobs:
         if: steps.organize.outputs.status == 'success'
         with:
           name: ${{ steps.rename.outputs.release_tag }}
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
+          # path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/
+          path: ${{ env.FIRMWARE }}
           
       - name: Upload to release
         uses: softprops/action-gh-release@v1
