@@ -187,13 +187,13 @@ jobs:
         run: |
           echo ::set-env name=RELEASE_TAG::"$(TZ=UTC-8 date +"%Y.%m.%d")"
           
-#      - name: Create release
-#        uses: softprops/action-gh-release@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-#        with:
-#          tag_name: ${{ env.RELEASE_TAG }}
-#          body: 🚀 Automated build | 自动编译
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          body: 🚀 Automated build | 自动编译
           
       - name: Upload to release
         uses: softprops/action-gh-release@v1
@@ -201,8 +201,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          tag_name: ${{ steps.organize.outputs.RELEASE_TAG }}
-          body: 🚀 Automated build | 自动编译
+#          tag_name: ${{ steps.organize.outputs.RELEASE_TAG }}
+#          body: 🚀 Automated build | 自动编译
           files: ${{ env.FIRMWARE }}/*
 
 #      - name: Create Release
